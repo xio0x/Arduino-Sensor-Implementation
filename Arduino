@@ -1,0 +1,230 @@
+#include <LiquidCrystal.h>
+#include <DHT.h>
+//--------------------------
+// Pin Definitions
+//--------------------------
+#define BUTTON_PIN 7
+#define DHTPIN 3
+#define PIRPIN 6
+#define TRIGPIN 4
+#define ECHOPIN 5
+// Reassigned LED pins
+#define REDLED A1
+#define GREENLED A2
+#define BLUELED A3
+//--------------------------
+// Sensor Setup
+//--------------------------
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+//--------------------------
+// LCD Setup
+//--------------------------
+LiquidCrystal lcd(13, 8, 9, 10, 11, 12);
+//--------------------------
+// Global Variables
+//--------------------------
+int mode = 0; // 0 = Temp/Humidity, 1 = Motion, 2 = Distance, 3 = Serial Mode
+unsigned long buttonPressTime = 0;
+bool systemActive = true;
+//--------------------------
+// Setup Function
+//--------------------------
+void setup() {
+Serial.begin(9600);
+pinMode(BUTTON_PIN, INPUT_PULLUP);
+pinMode(PIRPIN, INPUT);
+pinMode(TRIGPIN, OUTPUT);
+pinMode(ECHOPIN, INPUT);
+pinMode(REDLED, OUTPUT);
+pinMode(GREENLED, OUTPUT);
+pinMode(BLUELED, OUTPUT);
+dht.begin();
+lcd.begin(16, 2);
+lcd.clear();
+lcd.print("System Started");
+Serial.println("System Started");
+turnOffLEDs();
+updateMode();
+}
+//--------------------------
+// Main Loop Function
+//--------------------------
+void loop() {
+checkButton();
+if (systemActive) {
+switch (mode) {
+case 0: monitorTemperature(); break;
+case 1: detectMotion(); break;
+case 2: measureDistance(); break;
+case 3: serialMode(); break; // OpenCV Serial Mode
+}
+} else {
+lcd.clear();
+lcd.print("System Off");
+Serial.println("System Off");
+turnOffLEDs();
+}
+delay(1000);
+}
+//--------------------------
+// Function: checkButton()
+//--------------------------
+void checkButton() {
+if (digitalRead(BUTTON_PIN) == LOW) {
+buttonPressTime = millis();
+while (digitalRead(BUTTON_PIN) == LOW) {
+if (millis() - buttonPressTime > 1000) {
+systemActive = !systemActive;
+lcd.clear();
+lcd.print(systemActive ? "System On" : "System Off");
+Serial.println(systemActive ? "System On" : "System Off");
+delay(1000);
+return;
+}
+}
+if (systemActive) {
+mode = (mode + 1) % 4; // Now cycles through 4 modes
+updateMode();
+}
+delay(300);
+}
+}
+//--------------------------
+// Function: updateMode()
+//--------------------------
+void updateMode() {
+turnOffLEDs();
+lcd.clear();
+lcd.setCursor(0, 0);
+lcd.print("Mode: ");
+switch (mode) {
+case 0:
+lcd.print("Temp/Hum");
+Serial.println("Switched to Temp/Humidity Mode");
+digitalWrite(GREENLED, HIGH);
+break;
+case 1:
+lcd.print("Motion");
+Serial.println("Switched to Motion Detection Mode");
+digitalWrite(BLUELED, HIGH);
+break;
+case 2:
+lcd.print("Distance");
+Serial.println("Switched to Distance Mode");
+digitalWrite(REDLED, HIGH);
+break;
+case 3:
+lcd.print("Serial Mode");
+Serial.println("Switched to Serial Mode (OpenCV)");
+digitalWrite(REDLED, HIGH); // Red ON
+digitalWrite(BLUELED, HIGH); // Blue ON (Pink Color)
+break;
+}
+}
+//--------------------------
+// Function: serialMode()
+// Handles OpenCV Serial Communication
+//--------------------------
+void serialMode() {
+lcd.clear();
+lcd.setCursor(0, 0);
+lcd.print("Serial Mode: ");
+lcd.setCursor(0, 1);
+lcd.print("Waiting...");
+if (Serial.available() > 0) {
+String command = Serial.readStringUntil('\n');
+command.trim();
+if (command == "detected") {
+lcd.clear();
+lcd.print("Template Found!");
+Serial.println("Template detected");
+flashRedLED();
+}
+else if (command == "not_detected") {
+lcd.clear();
+lcd.print("Template Not Found");
+Serial.println("Template not detected");
+}
+}
+}
+//--------------------------
+// Function: monitorTemperature()
+//--------------------------
+void monitorTemperature() {
+float temp = dht.readTemperature();
+float humidity = dht.readHumidity();
+lcd.clear();
+lcd.print("T: ");
+lcd.print(temp, 1);
+lcd.print("C");
+lcd.setCursor(0, 1);
+lcd.print("H: ");
+lcd.print(humidity, 1);
+lcd.print("%");
+Serial.print("Temp: ");
+Serial.print(temp);
+Serial.print(" C, Humidity: ");
+Serial.print(humidity);
+Serial.println(" %");
+}
+//--------------------------
+// Function: detectMotion()
+//--------------------------
+void detectMotion() {
+int motion = digitalRead(PIRPIN);
+lcd.clear();
+lcd.setCursor(0, 0);
+if (motion == HIGH) {
+lcd.print("Motion Detected!");
+Serial.println("Motion Detected!");
+flashRedLED();
+} else {
+lcd.print("No Motion");
+Serial.println("No Motion");
+}
+}
+//--------------------------
+// Function: measureDistance()
+//--------------------------
+void measureDistance() {
+digitalWrite(TRIGPIN, LOW);
+delayMicroseconds(2);
+digitalWrite(TRIGPIN, HIGH);
+delayMicroseconds(10);
+digitalWrite(TRIGPIN, LOW);
+long duration = pulseIn(ECHOPIN, HIGH);
+int distance = duration * 0.034 / 2;
+lcd.clear();
+lcd.print("Dist: ");
+lcd.print(distance);
+lcd.print("cm");
+Serial.print("Distance: ");
+Serial.print(distance);
+Serial.println(" cm");
+if (distance < 10) {
+lcd.setCursor(0, 1);
+lcd.print("Too Close!");
+Serial.println("Object Too Close!");
+}
+}
+//--------------------------
+// Function: flashRedLED()
+// Briefly flashes the red LED (used for motion detection & OpenCV detection)
+//--------------------------
+void flashRedLED() {
+for (int i = 0; i < 3; i++) {
+digitalWrite(REDLED, HIGH);
+delay(100);
+digitalWrite(REDLED, LOW);
+delay(100);
+}
+}
+//--------------------------
+// Function: turnOffLEDs()
+//--------------------------
+void turnOffLEDs() {
+digitalWrite(REDLED, LOW);
+digitalWrite(GREENLED, LOW);
+digitalWrite(BLUELED, LOW);
+}
