@@ -61,6 +61,7 @@ This project demonstrates the ability to interface various hardware components t
    A connected Python program uses **template matching** to detect a specific object from images. If detected, the Arduino receives a “detected” message via serial communication and displays “Template Found!” on the LCD.
 
 ---
+![IMG_0404](https://github.com/user-attachments/assets/ed98c4c3-e2d7-48b3-94fb-bb1db362f023)
 
 ## Arduino Code Overview
 
