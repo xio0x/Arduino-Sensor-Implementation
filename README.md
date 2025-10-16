@@ -8,6 +8,12 @@
 
 ---
 
+![Multi-Sensor Monitoring System]![IMG_0404](https://github.com/user-attachments/assets/db084e71-8791-450b-b4b7-a5dc790b65cb)
+
+*Figure 1. The Multi-Sensor Monitoring System with connected sensors, LCD, and Arduino board.*
+
+---
+
 ## Overview
 
 The **Multi-Sensor Monitoring System** is an Arduino-based project designed to integrate multiple sensors—temperature/humidity, motion, distance, and button inputs—into a unified control system. Each sensor performs a distinct function, while a central LED and LCD display provide real-time feedback and visual cues.  
@@ -61,7 +67,6 @@ This project demonstrates the ability to interface various hardware components t
    A connected Python program uses **template matching** to detect a specific object from images. If detected, the Arduino receives a “detected” message via serial communication and displays “Template Found!” on the LCD.
 
 ---
-![IMG_0404](https://github.com/user-attachments/assets/ed98c4c3-e2d7-48b3-94fb-bb1db362f023)
 
 ## Arduino Code Overview
 
