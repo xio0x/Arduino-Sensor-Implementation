@@ -8,7 +8,7 @@
 
 ---
 
-![Multi-Sensor Monitoring System]![IMG_0404](https://github.com/user-attachments/assets/db084e71-8791-450b-b4b7-a5dc790b65cb)
+[IMG_0404](https://github.com/user-attachments/assets/db084e71-8791-450b-b4b7-a5dc790b65cb)
 
 *Figure 1. The Multi-Sensor Monitoring System with connected sensors, LCD, and Arduino board.*
 
